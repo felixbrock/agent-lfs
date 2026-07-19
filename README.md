@@ -5,14 +5,8 @@
 A [Linux From Scratch](https://www.linuxfromscratch.org/) (LFS 13.0,
 systemd) system that is built **and operated** by an AI agent.
 
-> ⚠️ **Experimental — use with care.** This is a research and hobby
-> project: an AI agent building and operating a source-built OS. It
-> genuinely daily-drives real hardware, but it is **not a supported
-> product**, has sharp edges, and assumes a human supervising every
-> go/no-go call. Never run it as your only system — always alongside
-> one you keep (see [Requirements](#requirements)). Read the
-> [case studies](#case-studies) before trusting it with anything you
-> care about.
+> ⚠️ **Experimental research project — use with care.** Not a
+> supported product. Never run it as your only system.
 
 Linux From Scratch normally means compiling an entire Linux system from
 source by hand, following the LFS book step by step. This project goes
