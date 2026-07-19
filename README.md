@@ -103,13 +103,16 @@ flowchart TB
 
     subgraph CLOUD["Cloud (scheduled)"]
         SWEEP["Security sweep routine<br/>CVE + version-lag checks<br/>for every installed package"]
+        REVIEW["Outward-contributions review<br/>(~every 5 days)<br/>anything worth publishing as a<br/>case study or reporting upstream?"]
     end
 
     subgraph GH["GitHub"]
         REPO["Public blueprint repo (this)<br/>build scripts, operator contracts,<br/>skills, sweep scripts, case studies"]
         PRIV["Private repos (config + ops)<br/>machine.env, instance scripts,<br/>live ledger, gate history"]
-        ISSUES["Issues (on the private ops repo)<br/>= findings channel<br/>'security: N actionable' +<br/>'sweep failing' self-alerts"]
+        ISSUES["Issues (on the private ops repo)<br/>findings channel + review nudges<br/>('security: N actionable',<br/>'sweep failing', 'contributions review')"]
     end
+
+    OUT["Outward contributions<br/>public case studies +<br/>upstream bug reports / LFS dev list"]
 
     subgraph SYS["LFS system — the live machine (agent-operated daily driver)"]
         AGENT["Claude agent session<br/>(operator & package manager)"]
@@ -125,8 +128,12 @@ flowchart TB
     FEEDS -->|CVE & version queries| SWEEP
     REPO -->|checked out per run| SWEEP
     SWEEP -->|opens / comments / auto-closes| ISSUES
+    PRIV -->|recent work reviewed| REVIEW
+    REVIEW -->|opens a nudge issue| ISSUES
     ISSUES -->|notification email| OWNER
     ISSUES -->|open findings picked up<br/>at session bootstrap| AGENT
+    AGENT -->|drafts; owner approves & sends| OUT
+    OWNER -->|publishes case study /<br/>files upstream report| OUT
     REPO -->|contracts + skills<br/>loaded every session| AGENT
     PRIV -->|machine.env +<br/>local contract + ops scripts| AGENT
     AGENT -->|every fix lands as a script<br/>change, committed back| REPO
@@ -211,6 +218,12 @@ operates around that spec in three roles:
   and release feeds for every installed component (~290 tracked).
 - **Incident responder** — open security findings are picked up at the
   start of every session and driven to a committed fix.
+- **Contributor** — a second scheduled routine reviews recent work
+  every few days for anything worth sending outward: a diagnosis worth
+  publishing as a [case study](#case-studies), or a bug worth reporting
+  upstream. It only opens a nudge issue; the agent drafts and the human
+  approves what actually goes out, held to a deliberately high bar
+  ("nothing this cycle" is the expected answer).
 
 Day to day, that looks like this:
 
@@ -366,24 +379,28 @@ for why).
   the accumulation threat model, the three-repo split, and why a
   mechanical leak gate beats a sanitization checklist.
 
-### Upstreamable fixes
+### Known upstream issues & workarounds
 
-Findings from the build that belong in upstream trackers or the LFS dev
-list:
+Building this system surfaced genuine issues in upstream software and
+the LFS book. Each is worked around in the build scripts and documented
+here for anyone who hits the same wall; the strongest candidates are
+periodically reported upstream (see the review routine in
+[How it works](#how-it-works)).
 
-- yajl 2.1.0: CMake 4 incompatibility (LOCATION property removal);
-  fixed here by trimming tool/test subdirs +
-  CMAKE_POLICY_VERSION_MINIMUM (build/blfs/scripts/130-yajl.sh)
-- i3blocks 1.5: `make install` race under parallel make
-  (install-data-local rename; needs -j1 —
-  build/blfs/scripts/133-i3blocks.sh)
-- unzip60: unbuildable with GCC 15's C23 default; documented
-  libarchive replacement path (build/blfs/scripts-gatec/203-unzip.sh)
-- XML-Parser 2.54: new hard runtime deps (File::ShareDir chain)
-  that the LFS book will hit at its next edition
-  (build/ch8/425-427*.sh)
-- GCC 15.2 pass 1 under a GCC 16 host: libcody u8"" / C++20
-  breakage, pass-1-only gnu++17 pin (build/ch5/20-gcc-pass1.sh)
+- **yajl 2.1.0** — CMake 4 incompatibility (LOCATION property removal);
+  worked around by trimming tool/test subdirs +
+  CMAKE_POLICY_VERSION_MINIMUM (`build/blfs/scripts/130-yajl.sh`).
+- **i3blocks 1.5** — `make install` race under parallel make
+  (install-data-local rename); needs `-j1`
+  (`build/blfs/scripts/133-i3blocks.sh`).
+- **unzip60** — unbuildable with GCC 15's C23 default; documented
+  libarchive replacement path
+  (`build/blfs/scripts-gatec/203-unzip.sh`).
+- **XML-Parser 2.54** — new hard runtime deps (File::ShareDir chain)
+  the LFS book will hit at its next edition (deps in
+  `build/ch8/425-427*.sh`, consumer `build/ch8/430-xml-parser.sh`).
+- **GCC 15.2 pass 1 under a GCC 16 host** — libcody u8"" / C++20
+  breakage; pass-1-only gnu++17 pin (`build/ch5/20-gcc-pass1.sh`).
 
 ## License
 
