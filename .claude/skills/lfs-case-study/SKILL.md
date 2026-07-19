@@ -24,6 +24,14 @@ true; NOTHING reaches public without the owner merging the PR):
 4. Shape: symptom → diagnosis chain (with the dead ends — they teach) →
    fix → "method notes" section carrying the transferable patterns.
    Number it case-studies/NNN-slug.md; add it to the README index.
-5. Publish path: branch + PR against agent-lfs with the checklist in
-   the PR body. The OWNER merges — never merge or push case studies
-   directly to main.
+5. LEAK GATE (mandatory, fail-closed): run
+   `scripts/case-study-scan.sh <file>`. It HARD-FAILS on any
+   machine-identifying string (private denylist + machine.env values +
+   generic MAC/UUID/IPv4 shapes) and lists chip-level IDs for review.
+   It must exit 0 before step 6, and every REVIEW item must be a
+   conscious chip-level (not machine-level) keep. The checklist in
+   step 3 is guidance; this script is the gate.
+6. Publish path: branch + PR against agent-lfs with the scan output +
+   checklist in the PR body. The OWNER merges — never merge or push
+   case studies directly to main. The scan is the mechanical gate; the
+   owner's merge is the human backstop.
