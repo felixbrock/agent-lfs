@@ -383,24 +383,35 @@ for why).
 
 Building this system surfaced genuine issues in upstream software and
 the LFS book. Each is worked around in the build scripts and documented
-here for anyone who hits the same wall; the strongest candidates are
-periodically reported upstream (see the review routine in
-[How it works](#how-it-works)).
+here for anyone who hits the same wall. All five were checked against
+current upstream in July 2026 (see the review routine in
+[How it works](#how-it-works)); the one genuinely unreported bug was
+filed.
 
+- **i3blocks 1.5** — `make install` race under parallel make
+  (install-data-local rename); needs `-j1`
+  (`build/blfs/scripts/133-i3blocks.sh`). Reported:
+  [vivien/i3blocks#498](https://github.com/vivien/i3blocks/issues/498).
 - **yajl 2.1.0** — CMake 4 incompatibility (LOCATION property removal);
   worked around by trimming tool/test subdirs +
   CMAKE_POLICY_VERSION_MINIMUM (`build/blfs/scripts/130-yajl.sh`).
-- **i3blocks 1.5** — `make install` race under parallel make
-  (install-data-local rename); needs `-j1`
-  (`build/blfs/scripts/133-i3blocks.sh`).
+  Already reported upstream
+  ([#257](https://github.com/lloyd/yajl/issues/257), fix
+  [PR #256](https://github.com/lloyd/yajl/pull/256) unmerged; the
+  project is dormant since 2015, distros carry the patch).
 - **unzip60** — unbuildable with GCC 15's C23 default; documented
   libarchive replacement path
-  (`build/blfs/scripts-gatec/203-unzip.sh`).
+  (`build/blfs/scripts-gatec/203-unzip.sh`). BLFS has since dropped
+  UnZip and adopted the same bsdunzip path.
 - **XML-Parser 2.54** — new hard runtime deps (File::ShareDir chain)
-  the LFS book will hit at its next edition (deps in
-  `build/ch8/425-427*.sh`, consumer `build/ch8/430-xml-parser.sh`).
+  not yet in the LFS 13.0 book (deps in `build/ch8/425-427*.sh`,
+  consumer `build/ch8/430-xml-parser.sh`). Since addressed upstream:
+  the development books moved XML::Parser to BLFS with the dependency
+  chain documented.
 - **GCC 15.2 pass 1 under a GCC 16 host** — libcody u8"" / C++20
   breakage; pass-1-only gnu++17 pin (`build/ch5/20-gcc-pass1.sh`).
+  Not book-reportable (hosts newer than tested are explicitly
+  unsupported), and moot for the development book, which builds GCC 16.
 
 ## License
 
