@@ -31,7 +31,7 @@ for spec in "$@"; do
   while IFS= read -r f; do
     if [ -L "$f" ] && [ ! -e "$f" ]; then
       rm -f "$f"; deleted=$((deleted+1))
-    elif echo "$f" | grep -qE "$regex"; then
+    elif echo "$f" | grep -qE -e "$regex"; then
       rm -rf "$f"; deleted=$((deleted+1))
     elif [ ! -e "$f" ] && [ ! -L "$f" ]; then
       gone=$((gone+1))
