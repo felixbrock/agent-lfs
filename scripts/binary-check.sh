@@ -20,9 +20,12 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 POST="$REPO/build/blfs/scripts-post"
 
 pin() {
-  # pin <extended-regex with one capture group> -> captured version
+  # pin <extended-regex with one capture group> -> captured version.
+  # Superseded install scripts stay in the repo, so several pins can
+  # match; the EFFECTIVE pin is the newest version, not the first file
+  # in glob order.
   local re="$1"
-  grep -rhoE "$re" "$POST"/*.sh "$REPO"/build/gated/*.sh 2>/dev/null | head -1 | sed -E "s/$re/\\1/" || true
+  grep -rhoE "$re" "$POST"/*.sh "$REPO"/build/gated/*.sh 2>/dev/null | sed -E "s/$re/\\1/" | sort -V | tail -1 || true
 }
 
 arch_ver() {
@@ -73,6 +76,9 @@ report fzf    "$(pin 'fzf-([0-9.]+)-linux_amd64')"           "$(arch_ver fzf)"
 report ripgrep "$(pin 'ripgrep-([0-9.]+)-x86_64-unknown')"   "$(arch_ver ripgrep)"
 report micro  "$(pin 'micro-([0-9.]+)-linux64')"             "$(arch_ver micro)"
 report fd     "$(pin 'fd-v([0-9.]+)-x86_64-unknown')"        "$(arch_ver fd)"
+# codex is AUR-only (no Arch official package), so this report line is
+# its whole feed; tier 1 skips it via the arch_name SKIP entry
+report codex  "$(pin 'codex-([0-9.]+)-x86_64-unknown')"      "$(aur_ver openai-codex-bin)"
 # the four below surfaced UNMONITORED by the 2026-07-17 coverage check;
 # unversioned artifacts report pinned=UNKNOWN until pinned at next update
 report cloudflared "$(pin 'cloudflared-([0-9.]+)-linux')"    "$(arch_ver cloudflared)"

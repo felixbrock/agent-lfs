@@ -45,6 +45,9 @@ arch_name() {
     util-macros) echo xorg-util-macros ;;
     # LFS-only, no Arch equivalent: skip silently
     blfs-systemd-units|make-ca) echo SKIP ;;
+    # AUR-only upstream binary, no Arch official package; tier 1b
+    # (binary-check, aur openai-codex-bin) is its monitoring feed
+    codex) echo SKIP ;;
     *) echo "$1" | tr 'A-Z' 'a-z' ;;
   esac
 }
