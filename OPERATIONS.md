@@ -74,6 +74,21 @@ Procedures below assume those mechanisms once they land.
   never wait for the batch day, and kernel/toolchain-class items keep
   their own go/no-go rules. The concrete batch day and procedure live
   in the private operations repo.
+- Language-package-manager installs (npm and similar) get a standing
+  supply-chain quarantine rather than per-incident vetting, because
+  registry worms recur with the same shape. Three generic mechanisms.
+  Install-time lifecycle scripts are disabled globally (the entry
+  point of every npm worm wave to date). Version resolution is capped
+  at a rolling N-day age via the resolver's before-date, wrappers that
+  shadow the package-manager binaries on PATH inject it, so a poisoned
+  release must survive N days of public scrutiny before it can even be
+  picked, while ranges and latest-tags silently fall back to the
+  newest old-enough version. A vetting helper resolves a candidate's
+  full dependency tree without installing anything and reports
+  lifecycle-script carriers and too-young versions. A named bypass
+  variable exists for the rare legitimate exception, so the guard is
+  never removed, only consciously stepped around. The concrete
+  wrappers, quarantine window, and staging live in the private repos.
 
 ## Execution reliability (how the agent guarantees this actually happens)
 
