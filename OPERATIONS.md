@@ -67,6 +67,13 @@ Procedures below assume those mechanisms once they land.
   go/no-go only for kernel/toolchain-class changes. Rationale: beats a
   realistic rolling-distro baseline (occasional manual -Syu) on patch
   latency.
+- Non-security currency updates (version lags whose release notes carry
+  no security content) are batched on one fixed day each month rather
+  than re-triaged daily. Daily monitoring verifies an item once when it
+  first appears, then parks it for the batch. Security-actionable items
+  never wait for the batch day, and kernel/toolchain-class items keep
+  their own go/no-go rules. The concrete batch day and procedure live
+  in the private operations repo.
 
 ## Execution reliability (how the agent guarantees this actually happens)
 
