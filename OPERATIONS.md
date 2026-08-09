@@ -89,6 +89,24 @@ Procedures below assume those mechanisms once they land.
   variable exists for the rare legitimate exception, so the guard is
   never removed, only consciously stepped around. The concrete
   wrappers, quarantine window, and staging live in the private repos.
+- The machine itself is scanned on a fixed weekly schedule, separate
+  from dependency/CVE monitoring, because package feeds say nothing
+  about the host's own posture. The scan diffs live state against
+  committed baselines rather than judging it fresh each time. Covered,
+  attack surface (listening sockets), privilege-escalation surface
+  (setuid/setgid inventory, file capabilities, world-writable paths),
+  persistence vectors (enabled units and timers, autostart entries,
+  cron appearance, PATH hygiene), and a week of authentication events.
+  It also verifies the system's own guards are still armed (append-only
+  audit-log flag, package-manager quarantine wrappers, config-drift
+  snapshots, alert-channel auth), because a guard that silently dies is
+  worse than one that never existed. The first thing this scan ever
+  caught was its own audit log's append-only flag, lost in a disk
+  migration weeks earlier. Drift files an issue on the private alert
+  channel, the next routine session triages it, and deliberate changes
+  are promoted into the committed baseline. Clean runs stamp locally
+  and the daily routine checks stamp freshness, so silence stays
+  provable. Baselines, script, and schedule live in the private repos.
 
 ## Execution reliability (how the agent guarantees this actually happens)
 
