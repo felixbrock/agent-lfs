@@ -133,7 +133,7 @@ flowchart TB
     REVIEW -->|opens a nudge issue| ISSUES
     ISSUES -->|notification email| OWNER
     ISSUES -->|open findings picked up<br/>at session bootstrap| AGENT
-    SCHED -->|fires the daily morning session<br/>(applies security updates, runs the<br/>non-security batch when due)| AGENT
+    SCHED -->|fires the daily morning session,<br/>which applies security updates and<br/>runs the non-security batch when due| AGENT
     SCHED -->|host-scan drift<br/>opens an issue| ISSUES
     AGENT -->|drafts; owner approves & sends| OUT
     OWNER -->|publishes case study /<br/>files upstream report| OUT
