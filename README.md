@@ -85,9 +85,9 @@ before it can replace anything:
 The whole operating model on one screen. You (the human) make go/no-go
 calls and provide hardware hands; the agent does everything else,
 working against this repository as the single source of truth,
-watched by a scheduled security sweep, with automatic rollback behind
-every change. Worth a look even if some boxes are unfamiliar — the
-shape is the point.
+watched by scheduled security checks in the cloud and on the machine
+itself, with automatic rollback behind every change. Worth a look
+even if some boxes are unfamiliar — the shape is the point.
 
 ```mermaid
 flowchart TB
@@ -102,7 +102,7 @@ flowchart TB
     end
 
     subgraph CLOUD["Cloud (scheduled)"]
-        SWEEP["Security sweep routine<br/>CVE + version-lag checks<br/>for every installed package"]
+        SWEEP["Daily security sweep<br/>CVE + version-lag checks<br/>for every installed package"]
         REVIEW["Outward-contributions review<br/>(~every 5 days)<br/>anything worth publishing as a<br/>case study or reporting upstream?"]
     end
 
@@ -116,6 +116,7 @@ flowchart TB
 
     subgraph SYS["LFS system — the live machine (agent-operated daily driver)"]
         AGENT["Agent session<br/>(operator & package manager)"]
+        SCHED["Local timers (systemd)<br/>daily morning session +<br/>daily host security scan +<br/>monthly non-security batch day"]
         CHROOT["On-system build chroot<br/>(package factory)"]
         SNAP["btrfs snapshot per change +<br/>systemd-boot boot counting<br/>(automatic rollback)"]
         STATE["Machine-readable state:<br/>package manifests,<br/>STATE.md journal, action log"]
@@ -132,6 +133,8 @@ flowchart TB
     REVIEW -->|opens a nudge issue| ISSUES
     ISSUES -->|notification email| OWNER
     ISSUES -->|open findings picked up<br/>at session bootstrap| AGENT
+    SCHED -->|fires the daily morning session<br/>(applies security updates, runs the<br/>non-security batch when due)| AGENT
+    SCHED -->|host-scan drift<br/>opens an issue| ISSUES
     AGENT -->|drafts; owner approves & sends| OUT
     OWNER -->|publishes case study /<br/>files upstream report| OUT
     REPO -->|contracts + skills<br/>loaded every session| AGENT

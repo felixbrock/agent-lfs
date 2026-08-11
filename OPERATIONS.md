@@ -89,7 +89,7 @@ Procedures below assume those mechanisms once they land.
   variable exists for the rare legitimate exception, so the guard is
   never removed, only consciously stepped around. The concrete
   wrappers, quarantine window, and staging live in the private repos.
-- The machine itself is scanned on a fixed weekly schedule, separate
+- The machine itself is scanned on a fixed daily schedule, separate
   from dependency/CVE monitoring, because package feeds say nothing
   about the host's own posture. The scan diffs live state against
   committed baselines rather than judging it fresh each time. Covered,
