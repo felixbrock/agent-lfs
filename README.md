@@ -22,7 +22,7 @@ two steps further:
    kernel and toolchain changes, and anything that needs physical
    hands.
 
-The result is not a toy. It boots a real laptop, with working GPU
+It boots a real laptop, with working GPU
 acceleration, Wi-Fi, and Bluetooth, and is used as a daily driver —
 with the agent running *on* the LFS system itself.
 
