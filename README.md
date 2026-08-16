@@ -424,46 +424,22 @@ for why).
 ### Known upstream issues & workarounds
 
 Building and operating this system keeps surfacing genuine issues in
-upstream software and the LFS book. This section is the running public
+upstream software and the LFS book. This table is the running public
 record of what gets spotted along the way. Each finding is worked
-around in the build scripts (or guarded by the provenance ledger) and
-documented here for anyone who hits the same wall. Anything unreported
-and still unfixed is verified against current upstream and then filed
-by the owner, and the periodic review (see
-[How it works](#how-it-works)) keeps this list current.
+around in the build scripts (or guarded by the provenance ledger) for
+anyone who hits the same wall. Anything unreported and still unfixed
+is verified against current upstream and then filed by the owner, and
+the periodic review (see [How it works](#how-it-works)) keeps the
+table current.
 
-- **make-ca 1.16.1** `--get` silently drops the last line of the
-  downloaded certdata.txt, because a fixed `head -n -33` strip assumes
-  the `openssl s_client` trailer never varies in length (it grows and
-  shrinks with TLS 1.3 session tickets). Found when a weekly refresh
-  stored a truncated trust store; locally the provenance ledger pin is
-  the guard against a silent bad fetch. Reported with a tested
-  content-anchored patch as
-  [lfs-book/make-ca#38](https://github.com/lfs-book/make-ca/issues/38).
-- **i3blocks 1.5** — `make install` race under parallel make
-  (install-data-local rename); needs `-j1`
-  (`build/blfs/scripts/133-i3blocks.sh`). Reported:
-  [vivien/i3blocks#498](https://github.com/vivien/i3blocks/issues/498).
-- **yajl 2.1.0** — CMake 4 incompatibility (LOCATION property removal);
-  worked around by trimming tool/test subdirs +
-  CMAKE_POLICY_VERSION_MINIMUM (`build/blfs/scripts/130-yajl.sh`).
-  Already reported upstream
-  ([#257](https://github.com/lloyd/yajl/issues/257), fix
-  [PR #256](https://github.com/lloyd/yajl/pull/256) unmerged; the
-  project is dormant since 2015, distros carry the patch).
-- **unzip60** — unbuildable with GCC 15's C23 default; documented
-  libarchive replacement path
-  (`build/blfs/scripts-gatec/203-unzip.sh`). BLFS has since dropped
-  UnZip and adopted the same bsdunzip path.
-- **XML-Parser 2.54** — new hard runtime deps (File::ShareDir chain)
-  not yet in the LFS 13.0 book (deps in `build/ch8/425-427*.sh`,
-  consumer `build/ch8/430-xml-parser.sh`). Since addressed upstream:
-  the development books moved XML::Parser to BLFS with the dependency
-  chain documented.
-- **GCC 15.2 pass 1 under a GCC 16 host** — libcody u8"" / C++20
-  breakage; pass-1-only gnu++17 pin (`build/ch5/20-gcc-pass1.sh`).
-  Not book-reportable (hosts newer than tested are explicitly
-  unsupported), and moot for the development book, which builds GCC 16.
+| upstream | finding | type | status | workaround here | report |
+|---|---|---|---|---|---|
+| make-ca 1.16.1 | `--get` silently drops the last certdata.txt line, a fixed `head -n -33` strip assumes the `openssl s_client` trailer never varies (it grows and shrinks with TLS 1.3 session tickets) | bug | **open**, filed 2026-08-16 with a tested patch | provenance ledger pins the fetched copy, a silent bad fetch cannot slip through | [lfs-book/make-ca#38](https://github.com/lfs-book/make-ca/issues/38) |
+| i3blocks 1.5 | `make install` race under parallel make (install-data-local rename) | bug | **open**, filed 2026-07-20, maintainer silent so far | `-j1` in `build/blfs/scripts/133-i3blocks.sh` | [vivien/i3blocks#498](https://github.com/vivien/i3blocks/issues/498) |
+| yajl 2.1.0 | CMake 4 incompatibility (LOCATION property removal) | bug | **known upstream**, fix [PR #256](https://github.com/lloyd/yajl/pull/256) unmerged, project dormant since 2015, distros carry the patch | trimmed tool/test subdirs + CMAKE_POLICY_VERSION_MINIMUM in `build/blfs/scripts/130-yajl.sh` | [lloyd/yajl#257](https://github.com/lloyd/yajl/issues/257) |
+| unzip60 | unbuildable with GCC 15's C23 default | bug | **resolved ecosystem-side**, BLFS dropped UnZip for libarchive's bsdunzip | same bsdunzip path in `build/blfs/scripts-gatec/203-unzip.sh` | none needed |
+| LFS 13.0 book | XML::Parser 2.54 ships new hard runtime deps (File::ShareDir chain) the book did not carry | book gap | **resolved upstream**, the development books moved XML::Parser to BLFS with the dep chain documented | deps built in `build/ch8/425-427*.sh` | none needed |
+| LFS 13.0 book | GCC 15.2 pass 1 breaks under a GCC 16 host (libcody `u8""` / C++20) | host incompatibility | **not filed**, the book explicitly does not support hosts newer than tested, and the development book builds GCC 16 | pass-1-only gnu++17 pin in `build/ch5/20-gcc-pass1.sh` | none |
 
 ## License
 
