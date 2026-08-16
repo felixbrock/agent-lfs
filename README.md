@@ -423,13 +423,23 @@ for why).
 
 ### Known upstream issues & workarounds
 
-Building this system surfaced genuine issues in upstream software and
-the LFS book. Each is worked around in the build scripts and documented
-here for anyone who hits the same wall. All five were checked against
-current upstream in July 2026 (see the review routine in
-[How it works](#how-it-works)); the one genuinely unreported bug was
-filed.
+Building and operating this system keeps surfacing genuine issues in
+upstream software and the LFS book. This section is the running public
+record of what gets spotted along the way. Each finding is worked
+around in the build scripts (or guarded by the provenance ledger) and
+documented here for anyone who hits the same wall. Anything unreported
+and still unfixed is verified against current upstream and then filed
+by the owner, and the periodic review (see
+[How it works](#how-it-works)) keeps this list current.
 
+- **make-ca 1.16.1** `--get` silently drops the last line of the
+  downloaded certdata.txt, because a fixed `head -n -33` strip assumes
+  the `openssl s_client` trailer never varies in length (it grows and
+  shrinks with TLS 1.3 session tickets). Found when a weekly refresh
+  stored a truncated trust store; locally the provenance ledger pin is
+  the guard against a silent bad fetch. Reported with a tested
+  content-anchored patch as
+  [lfs-book/make-ca#38](https://github.com/lfs-book/make-ca/issues/38).
 - **i3blocks 1.5** — `make install` race under parallel make
   (install-data-local rename); needs `-j1`
   (`build/blfs/scripts/133-i3blocks.sh`). Reported:
