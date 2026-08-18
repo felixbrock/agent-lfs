@@ -43,17 +43,24 @@ committed here.
   package exists and the community packages remove the vendor's
   checks instead of keeping them
 
-The agent has four jobs,
+The agent has five jobs,
 
+- **builder**, compile the whole system from the book in the first
+  place, and rebase onto each new book edition roughly twice a year
 - **package manager**, build the new version, compare the old and
   new file lists, apply the difference onto a fresh disk snapshot (a
   saved copy of the filesystem the machine can fall back to),
   boot-test, then make it the running system
-- **security monitor**, a scheduled cloud check (the sweep) that
-  queries public vulnerability databases (the CVE trackers) and
-  release feeds for every installed component (~290 tracked)
-- **incident responder**, pick up open findings at the start of
-  every session and work each one to a fix that lands in the repo
+- **security monitor**, two layers, a scheduled cloud check (the
+  sweep) that queries public vulnerability databases (the CVE
+  trackers) and release feeds for every installed component (~290
+  tracked), and a daily scan of the machine itself (open network
+  ports, programs that run with elevated rights, autostart entries)
+  diffed against committed baselines, including a check that the
+  system's own guards are still armed
+- **incident responder**, both checks deliver findings as GitHub
+  issues; pick up the open ones at the start of every session and
+  work each one to a fix that lands in the repo
 - **contributor**, a periodic review flags work worth publishing as
   a [case study](#case-studies) or worth reporting to the people who
   maintain the affected software (upstream); the agent drafts, the
