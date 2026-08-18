@@ -3,107 +3,88 @@
 </p>
 
 A [Linux From Scratch](https://www.linuxfromscratch.org/) (LFS 13.0,
-systemd) system that is built **and operated** by an AI agent.
+systemd) system built **and operated** by an AI agent.
 
 > ⚠️ **Experimental research project — use with care.**
 
-Linux From Scratch normally means compiling an entire Linux system from
-source by hand, following the LFS book step by step. This project goes
-two steps further:
+Linux From Scratch normally means compiling a whole Linux system from
+source by hand, following the LFS book. This project goes two steps
+further.
 
-1. **Everything is scripted.** Every package is a small, reproducible
-   build script. Every installed file is tracked in a manifest. Every
-   downloaded source is checked against a pinned hash before it is
-   allowed anywhere near the build.
-2. **An agent runs the system.** The agent does the
-   builds, upgrades, security monitoring, and boot testing under
-   written contracts (CLAUDE.md, OPERATIONS.md, AGENT-DESIGN.md). The
-   human owner stays in the loop for exactly two things: go/no-go on
-   kernel and toolchain changes, and anything that needs physical
-   hands.
+1. **Everything is scripted.** Every package is a reproducible build
+   script, every installed file is tracked in a manifest, every source
+   is checked against a pinned hash before it touches the build.
+2. **An agent runs the system.** Builds, upgrades, security
+   monitoring, and boot testing, under written contracts (CLAUDE.md,
+   OPERATIONS.md, AGENT-DESIGN.md). The human decides go/no-go on
+   kernel and toolchain changes and provides physical hands. That's
+   it.
 
-It boots a real laptop, with working GPU
-acceleration, Wi-Fi, and Bluetooth, and is used as a daily driver —
-with the agent running *on* the LFS system itself.
+It boots a real laptop (GPU acceleration, Wi-Fi, Bluetooth) and is
+used as a daily driver, with the agent running *on* the LFS system
+itself.
 
 **Why not just use a package manager?** A package manager hands you
 the same bytes every time, but nobody reads the install logic those
 bytes came from. Here every install is a reviewed, pinned script, and
 that scrutiny pays outward. Two of the security reports on
 [the public reports page](https://felixbrock.github.io/upstream-reports/)
-came from reading a single vendor installer before its first run, a
-hash-verification tier that silently disabled itself and a nested
-unpinned curl-to-bash, defects that were shipping quietly with every
-default install. And the packaged path caught neither. We checked, no
-official distro package exists for that app, and the community
-packages sidestep the vendor's protections instead of carrying them
-(plain pip in place of the hash-locked resolver, an upstream build
-guard patched out, the unpinned fetch still reachable at runtime).
+came from reading one vendor installer before its first run (a
+hash-verification tier that silently disabled itself, a nested
+unpinned curl-to-bash). The packaged path caught neither. We checked,
+no official distro package exists for that app and the community
+packages sidestep the vendor's protections instead of carrying them.
 Deterministic delivery is not review. Someone still has to read the
-install path, and here that someone is on duty for every install.
+install path.
 
-> **Two audiences read this file.** If you are a **human** deciding
-> whether to run this, read [For the human](#for-the-human) and stop —
-> it is short by design. If you are an **agent** operating the system,
-> or a person who wants the full technical picture, everything from
-> [For the agent](#for-the-agent) onward is written for you, and it is
-> most of the file.
+> **Two audiences read this file.** A **human** deciding whether to
+> run this reads [For the human](#for-the-human) and stops. An
+> **agent** operating the system, or anyone wanting the full
+> picture, starts at [For the agent](#for-the-agent).
 
 ## For the human
 
-You do not build or run this system yourself. You **supervise an agent
-that does.** Your job is to point it at this repository, keep your
-existing system running alongside it as a safety net, and stay
-available for the few decisions and physical steps only you can make.
+You don't build or run this yourself. You **supervise an agent that
+does**, and stay available for the few decisions and physical steps
+only you can make.
 
 ### Quickstart
 
-1. **Get a coding agent on its strongest model.** This was built and is
-   operated with Claude Code on Claude's frontier tier (currently
-   Fable 5). A source build runs for days; weaker models drift over
-   that distance. Other agents work too (see
-   [Operating](#operating)) — the same model rule holds.
-2. **Create two private repositories of your own** for everything
-   specific to your machine: a *config* repo (device paths, secrets
-   policy) and an *ops* repo (your operational history). Nothing
-   machine-specific ever goes in this public blueprint — the agent
-   walks you through setting them up. Why the separation matters is
-   [case study 005](case-studies/005-operating-in-public-without-leaking.md).
-3. **Point the agent at this repo and say what you want** — "build this
-   system," or on a built one, ask it where things stand. The contracts
-   and skills here carry the procedure; you do not need to know the
-   steps.
-4. **Stay in the loop.** The agent hands you exactly two kinds of thing:
-   go/no-go on kernel and toolchain changes, and actions that need root
-   or physical hands. Everything else it does itself, and journals.
+1. **Get a coding agent on its strongest model.** Built and operated
+   with Claude Code on Claude's frontier tier (currently Fable 5). A
+   source build runs for days, weaker models drift over that
+   distance. Other agents work too (see [Operating](#operating)).
+2. **Create two private repos of your own**, a *config* repo (device
+   paths, secrets policy) and an *ops* repo (operational history).
+   Nothing machine-specific ever goes in this public blueprint, and
+   the agent walks you through the setup. Why the separation matters
+   is [case study 005](case-studies/005-operating-in-public-without-leaking.md).
+3. **Point the agent at this repo and say what you want.** "Build
+   this system", or on a built one, ask where things stand. The
+   contracts and skills carry the procedure.
+4. **Stay in the loop.** You get exactly two kinds of handoff,
+   go/no-go on kernel and toolchain changes, and actions that need
+   root or physical hands.
 
 ### Requirements
 
-Front-loaded, because this runs *alongside* your real system for weeks
-before it can replace anything:
+Front-loaded, because this runs *alongside* your real system for
+weeks before it can replace anything.
 
-- **A host system you keep.** You build inside a chroot on an existing
-  Linux install (any mainstream distro, with root). That install stays
-  as build host *and* safety net until you have proven the new system
-  and deliberately chosen to retire it. This process never overwrites
-  your only machine.
-- **Separate target media.** A spare disk, SD card, or partition to
-  install onto — never your live root.
-- **Hardware headroom.** A multi-core machine (compiles take hours to
-  days) and tens of GB of disk for sources and the build tree.
-- **A frontier-model coding agent** (see step 1) and an account that
-  can run it through a long, mostly-autonomous build.
-- **Your time and judgment.** You are the supervisor: expect go/no-go
-  moments and hands-on-hardware steps spread across the build.
+- a host Linux install you keep, it stays build host and safety net
+  until the new system is proven (never your only machine)
+- separate target media, a spare disk, SD card, or partition
+- hardware headroom, multi-core CPU and tens of GB of disk
+- a frontier-model coding agent and an account that survives a long,
+  mostly-autonomous build
+- your time and judgment for go/no-go moments and hands-on steps
 
 ### Architecture
 
-The whole operating model on one screen. You (the human) make go/no-go
-calls and provide hardware hands; the agent does everything else,
-working against this repository as the single source of truth,
-watched by scheduled security checks in the cloud and on the machine
-itself, with automatic rollback behind every change. Worth a look
-even if some boxes are unfamiliar — the shape is the point.
+The whole operating model on one screen. You make go/no-go calls and
+provide hardware hands, the agent does everything else against this
+repo as the single source of truth, watched by scheduled security
+checks, with automatic rollback behind every change.
 
 ```mermaid
 flowchart TB
@@ -170,329 +151,220 @@ The agent-facing detail behind each box is in
 
 ### Upstream reports
 
-Impact beyond this machine. Defects that this project's build or
-operation hits in real software get root-caused, checked against the
-upstream tracker for duplicates, and reported upstream under the
-owner's identity (a finding already filed by someone else gets a
-verified confirmation on the existing thread instead of a duplicate).
-The list itself is operational data, so its ground truth lives in the
-private ops repo and every change republishes the public table at
+Impact beyond this machine. Defects this project hits in real
+software get root-caused, dupe-checked against the upstream tracker,
+and reported under the owner's identity (an already-filed finding
+gets a verified confirmation on the existing thread instead of a
+duplicate). Ground truth lives in the private ops repo and every
+change republishes the public table at
 
 **https://felixbrock.github.io/upstream-reports/**
 
 ## For the agent
 
-Everything below is the operational picture — the contracts, the
-machinery, and the hard-won patterns. It is the bulk of this
-repository, written for the operator (an agent, or a deeply technical
-reader), not for the supervising human.
-
-> **Read the human section above first.** It is short, and its
-> [Architecture](#architecture) diagram and overview are written to be
-> read by you too — the material below is the depth behind them, not a
-> replacement.
+Everything below is the operational picture, written for the operator
+(an agent, or a deeply technical reader). Read the human section
+first, its [Architecture](#architecture) diagram is written for you
+too.
 
 ### Operating
 
 ```sh
 git clone https://github.com/felixbrock/agent-lfs.git ~/repos/agent-lfs
 cd ~/repos/agent-lfs
-claude    # or any coding agent — the operator contract is CLAUDE.md / AGENTS.md
+claude    # any coding agent works, the operator contract is CLAUDE.md / AGENTS.md
 ```
 
-The repo is written to be self-sufficient for an agent: telling it
-"build this system" — or, on a built one, `/lfs-status` — is enough.
-The operator contract, the vendored book pages, the scripts, and the
-step-by-step skills (`.claude/skills/`: `/lfs-status`, `/lfs-upgrade`,
-`/lfs-sweep`) carry the procedure; the hash ledger and file manifests
-keep it honest. Two caveats: use a flagship model (a days-long
-autonomous build is exactly where weaker models drift), and expect to
-stay in the loop for root commands and go/no-go calls — the contract
-makes the agent hand those to the human rather than guess.
+Telling the agent "build this system", or `/lfs-status` on a built
+one, is enough. The contract, the vendored book pages, the scripts,
+and the skills (`.claude/skills/`, `/lfs-status` `/lfs-upgrade`
+`/lfs-sweep`) carry the procedure, the hash ledger and file manifests
+keep it honest. Use a flagship model, and expect to stay in the loop
+for root commands and go/no-go calls.
 
-Not a Claude Code user? The contract is agent-agnostic and mirrored
-at [AGENTS.md](AGENTS.md), the convention read by
+Not a Claude Code user? The contract is mirrored at
+[AGENTS.md](AGENTS.md), the convention read by
 [Codex CLI](https://github.com/openai/codex),
-[Hermes Agent](https://github.com/NousResearch/hermes-agent)
-(open source, self-hostable), and most other coding agents. The
-skills are plain markdown — point your agent at
-`.claude/skills/*/SKILL.md` when a procedure applies. The same model
-rule holds: run whichever agent on the strongest model you have.
+[Hermes Agent](https://github.com/NousResearch/hermes-agent), and
+most other coding agents. Skills are plain markdown, point your agent
+at `.claude/skills/*/SKILL.md`. The same model rule holds.
 
-Everything machine-specific (device paths, VM access, the operations
-log) is sourced from the private sibling repos — see
-[Three-repo split](#three-repo-split); the blueprint never needs
+Everything machine-specific comes from the private sibling repos, see
+[Three-repo split](#three-repo-split). The blueprint never needs
 editing for instance values.
 
 ### Reading order
 
-- [OPERATIONS.md](OPERATIONS.md) — the operating model: how a
-  source-built system stays a viable daily driver.
-- [CLAUDE.md](CLAUDE.md) — the contract the agent operates under.
-- [AGENT-DESIGN.md](AGENT-DESIGN.md) — the register of every deviation
-  from the LFS book.
-- [PROVENANCE.md](PROVENANCE.md) — the supply-chain rules.
-- [INVARIANTS.md](INVARIANTS.md) — the standing invariants the system
-  is checked against at the end of every session.
-- [case-studies/](case-studies/) — real diagnosis chains from operating
-  the system, written up as transferable patterns. The best sense of
-  what this is actually like.
+- [OPERATIONS.md](OPERATIONS.md) — the operating model
+- [CLAUDE.md](CLAUDE.md) — the operator contract
+- [AGENT-DESIGN.md](AGENT-DESIGN.md) — register of every deviation from the book
+- [PROVENANCE.md](PROVENANCE.md) — supply-chain rules
+- [INVARIANTS.md](INVARIANTS.md) — standing invariants, checked after every session
+- [case-studies/](case-studies/) — real diagnosis chains, the best sense of what this is like
 
 ### How it works
 
-The repo is the single source of truth. Every package is a build
-script, every deviation from the LFS book is registered, and the
-running system never diverges from what is committed here. The agent
-operates around that spec in three roles:
+The repo is the spec. Every package is a build script, every book
+deviation is registered, and the running system never diverges from
+what is committed here. The agent's roles,
 
-- **Package manager** — build a new version, diff the file manifests,
-  apply the diff onto a fresh snapshot, boot-test, promote.
-- **Security monitor** — a scheduled cloud routine sweeps CVE trackers
-  and release feeds for every installed component (~290 tracked).
-- **Incident responder** — open security findings are picked up at the
-  start of every session and driven to a committed fix.
-- **Contributor** — a second scheduled routine reviews recent work
-  every few days for anything worth sending outward: a diagnosis worth
-  publishing as a [case study](#case-studies), or a bug worth reporting
-  upstream. It only opens a nudge issue; the agent drafts and the human
-  approves what actually goes out, held to a deliberately high bar
-  ("nothing this cycle" is the expected answer).
+- **package manager** — build the new version, diff manifests, apply
+  onto a fresh snapshot, boot-test, promote
+- **security monitor** — scheduled cloud sweep of CVE trackers and
+  release feeds for every installed component (~290 tracked)
+- **incident responder** — open findings picked up at every session
+  start and driven to a committed fix
+- **contributor** — a periodic review flags work worth publishing as
+  a [case study](#case-studies) or reporting upstream; the agent
+  drafts, the human approves what goes out
 
-Day to day, that looks like this:
+The mechanics behind the diagram,
 
-- Packages are built either in a chroot on the build host or natively
-  on the live system (`scripts/live-run-all.sh` — same hash gate,
-  stamps, and manifests); host-built batches are applied to the target
-  via manifest copies.
-- A QEMU VM twin boot-tests boot-critical changes before they touch the
-  real system.
-- Agent work is coordinated through an on-machine journal
-  (`/var/lib/agent/STATE.md`) and this repo, so any session can
-  reconstruct where things stand without relying on chat history.
-
-The [Architecture diagram](#architecture) in the human section is the
-operating model at a glance — snapshots, boot counting, and a rescue
-root providing automatic rollback (AGENT-DESIGN.md D1–D3). The pieces
-behind it, in plain terms:
-
-- **The repo is the spec.** Build scripts (`build/*/NNN-pkg.sh`), the
-  operator contract (CLAUDE.md), the divergence register
-  (AGENT-DESIGN.md), the operating model (OPERATIONS.md), and the
-  agent's step-by-step procedures (`.claude/skills/`) all live here.
-  Every fix lands as a script change first and is applied second —
-  never the reverse. That keeps the system reproducible: nothing on
-  the machine exists that the repo can't explain.
-- **Security monitoring that matches the software.** A scheduled cloud
-  routine checks every class of installed software the way that class
-  needs: source packages are CVE-checked against the Arch *and* Debian
-  security trackers (two independent triage lenses); vendor binaries
-  like browsers are checked for version lag, because for those staying
-  current *is* the security control; user-level Python tools are
-  queried against OSV.dev; LFS/BLFS advisories serve as remediation
-  recipes. Findings arrive as GitHub issues. If the sweep
-  infrastructure itself breaks, that raises its own issue — so a quiet
-  day genuinely means a clean day.
-- **Coverage as a closed loop.** Monitoring is only as good as its
-  inventory. A deterministic tripwire (`scripts/coverage-check.sh`)
-  compares everything actually installed on the system against the
-  union of everything monitored. Anything unaccounted for is flagged
-  until it gets a feed mapping or a written ignore reason. Gaps can
-  exist, but they can't persist silently — its very first run caught a
-  completely unmonitored Chrome install.
-- **Issue → fix loop.** Every session starts by listing open security
-  issues. The agent triages, upgrades the affected package, boot-tests,
-  promotes, commits, and closes the issue.
-- **Safe changes on a live machine.** Every upgrade batch goes onto a
-  fresh btrfs snapshot; systemd-boot boot counting promotes it after a
-  successful boot or automatically falls back to the previous
-  known-good entry. If even the fallback fails, a minimal rescue root —
-  its own boot entry, never upgraded together with the main root —
-  comes up reachable over SSH so the agent can repair the system
-  without physical hands.
-- **The machine remembers.** The system carries its own state: a
-  journal (STATE.md), an append-only action log, and per-package file
-  manifests. Any future session can reconstruct where things stand
-  without relying on chat history. The action log's append-only
-  property is kernel-enforced (`chattr +a`): the agent writes its own
-  audit trail but cannot rewrite it.
+- **every fix lands as a script change first** and is applied second,
+  never the reverse, so nothing exists on the machine the repo can't
+  explain
+- **packages build in the host chroot or natively on the live
+  system** (same hash gate, stamps, manifests), and a QEMU VM twin
+  boot-tests boot-critical changes before they touch metal
+- **monitoring matches the software class**, source packages against
+  the Arch *and* Debian trackers, vendor binaries by version lag,
+  user-level Python via OSV.dev, LFS/BLFS advisories as remediation
+  recipes; findings arrive as GitHub issues, and a broken sweep
+  raises its own issue, so a quiet day means a clean day
+- **coverage is a closed loop**, `scripts/coverage-check.sh` compares
+  everything installed against everything monitored and flags the
+  difference until it's mapped or ignored with a written reason (its
+  first run caught an unmonitored Chrome install)
+- **every upgrade batch lands on a fresh btrfs snapshot**,
+  systemd-boot boot counting promotes or auto-rolls-back, and a
+  rescue root (own boot entry, never co-upgraded) comes up over SSH
+  if even the fallback fails
+- **the machine remembers**, a STATE.md journal, per-package
+  manifests, and a kernel-enforced append-only action log
+  (`chattr +a`), so any session reconstructs state without chat
+  history
 
 ### Invariants
 
-The guarantees above are collected into an explicit register —
-[INVARIANTS.md](INVARIANTS.md) — and checked as a whole. The idea is
-borrowed from the seL4 verification project ([Klein et al., "seL4:
-Formal Verification of an OS Kernel", SOSP 2009](https://www.sigops.org/s/conferences/sosp/2009/papers/klein-sosp09.pdf)):
-80% of that proof effort went into invariants — properties of system
-state that must hold before and after every operation — and the
-authors found the invariant list valuable in itself, independent of
-the proof. An ops repo can't prove theorems over 300 shell scripts,
-but it can take the shape of the method: state the invariants
-explicitly, and check every one deterministically.
+The guarantees above are an explicit register,
+[INVARIANTS.md](INVARIANTS.md), checked as a whole. The shape is
+borrowed from the seL4 verification project ([Klein et al., SOSP
+2009](https://www.sigops.org/s/conferences/sosp/2009/papers/klein-sosp09.pdf)),
+state the invariants explicitly and check every one
+deterministically.
 
-- **I1** — every binary and library on the system appears in a package
-  manifest: nothing was installed outside the machinery.
-- **I2** — every manifest traces to a build script in the repos: no
-  change exists that never landed as a script.
-- **I3** — every artifact staged in `/sources` is pinned in the hash
-  ledger: nothing is waiting to be built that never passed the gate.
-- **I4** — everything runnable is security-monitored or ignored with a
-  written reason (the coverage tripwire above).
-- **I5** — build scripts keep the failure-visible style the contract
-  demands (`set -euo pipefail`, one command per line).
+- **I1** — every binary and library appears in a package manifest
+- **I2** — every manifest traces to a build script
+- **I3** — every staged artifact is pinned in the hash ledger
+- **I4** — everything runnable is monitored or ignored with a written
+  reason
+- **I5** — build scripts keep the failure-visible style
+  (`set -euo pipefail`, one command per line)
 
-`scripts/invariant-check.sh` runs all five read-only, as the
-post-condition of every operational session: an upgrade isn't done
-when the package builds — it's done when the invariants hold again.
-Pre-existing coverage gaps are pinned in a baseline rather than
-silently ignored (the same honest trade the provenance ledger makes);
-the baseline describes the concrete machine, so it lives in the
-private ops repo alongside the live ledger, and the checker resolves
-both through the [three-repo split](#three-repo-split). Its first full
-run earned its keep: it surfaced a toolchain that had been installed
-without joining the security sweep and two build scripts violating the
-one-command-per-line rule — exactly the class of small,
-testing-resistant fault the seL4 paper's bug data warns about.
+`scripts/invariant-check.sh` runs all five read-only as the
+post-condition of every session. An upgrade isn't done when the
+package builds, it's done when the invariants hold again.
+Pre-existing gaps are baselined in the private ops repo, never
+silently ignored. The first full run surfaced an unmonitored
+toolchain and two style violations, exactly the small
+testing-resistant faults the seL4 bug data warns about.
 
 ### Building by hand
 
-The same path the agent takes — the LFS book, as scripts. Expect days
-of compile time and a human in the loop for root steps:
+The same path the agent takes, the book as scripts. Expect days of
+compile time and a human for root steps.
 
-1. Host prerequisites per LFS 13.0 ch. 2–3 (the exact book pages the
-   scripts were derived from are vendored under `book/` and alongside
-   each script), then `sudo scripts/prep-ch4.sh` — creates `/mnt/lfs`
-   and the unprivileged `lfs` build user.
-2. Stage sources into `/mnt/lfs/sources` — every artifact must first
-   pass `scripts/verify-source.sh` against the pinned sha256 ledger
+1. Host prerequisites per LFS 13.0 ch. 2–3 (book pages vendored under
+   `book/`), then `sudo scripts/prep-ch4.sh`.
+2. Stage sources into `/mnt/lfs/sources`, every artifact must pass
+   `scripts/verify-source.sh` against the pinned ledger
    (`ops/sources-sha256.txt`).
-3. Run the chapters in order: `build/ch5/run-all.sh` and
-   `build/ch6/run-all.sh` as the `lfs` user; `sudo scripts/prep-ch7.sh`
-   (read its security note first) installs the chroot helper for
-   `build/ch7` and `build/ch8`; chapter 9's configuration scripts and
-   the BLFS desktop tiers (`build/blfs/`) follow. Every package script
-   is stamped and writes a file manifest, so reruns are surgical.
-4. Boot-test the result in QEMU: `scripts/vm-up.sh` (`--display` for a
-   window), `scripts/vm-down.sh` to shut it down safely.
+3. Run the chapters in order, `build/ch5` and `build/ch6` as the
+   `lfs` user, `sudo scripts/prep-ch7.sh` (read its security note)
+   for the `build/ch7`–`ch8` chroot, then chapter 9 and the BLFS
+   tiers (`build/blfs/`). Every script is stamped and writes a
+   manifest, so reruns are surgical.
+4. Boot-test in QEMU, `scripts/vm-up.sh` (`--display` for a window),
+   `scripts/vm-down.sh` to shut down safely.
 
 ### Three-repo split
 
-The system is defined across three repositories:
+- **agent-lfs** (this repo, the blueprint) — scripts, contracts,
+  skills, sweep machinery, case studies. Tied to no machine or
+  person.
+- **lfs-ops** (private, the operations log) — the concrete machine's
+  lineage, incidents, current package state. A complete, current,
+  attributed ops log of a personal machine is a targeting dossier,
+  so episodes only graduate to public case studies once cold and
+  sanitized.
+- **lfs-config** (private, the instance) — what a session must read
+  to operate this machine, `machine.env`, dotfiles, verification
+  state, credentials policy.
 
-- **agent-lfs** (this repo — the blueprint): architecture, build
-  scripts, operator contracts, agent skills, sweep machinery, and
-  case studies. Everything needed to build and operate *an*
-  agent-driven LFS system, tied to no particular machine or person.
-- **lfs-ops** (private — the operations log): the concrete machine's
-  operational lineage — kernel revision scripts with their hardware
-  narratives, migration and incident records, current package state.
-  Kept private on purpose: a complete, current, attributed operations
-  log of a personal machine is a targeting dossier, however
-  instructive its episodes are. The episodes graduate to public case
-  studies once cold and sanitized.
-- **lfs-config** (private — the instance): everything a fresh session
-  must read to operate this concrete system — hardware identifiers
-  (`machine.env`), personal dotfiles, verification state,
-  credentials policy.
-
-All three are checked out as siblings. Blueprint scripts and skills
-find the config half via `$LFS_CONFIG` (default `~/repos/lfs-config`)
-and source `machine.env` from there, which in turn points at the ops
-repo (`LFS_OPS`) and the live ledger (`LFS_LEDGER`). Instance
-operations are RUN FROM the ops repo, so their machinery and ledger
-resolve privately. To run your own system from this blueprint, create
-your own private config and ops repos — the blueprint never needs
-editing for machine-specific values, and your operational history
-never needs publishing.
+All three are siblings. Blueprint machinery resolves the config repo
+via `$LFS_CONFIG` and sources `machine.env`, which points at the ops
+repo (`LFS_OPS`) and live ledger (`LFS_LEDGER`). To run your own
+system, create your own private pair, the blueprint never needs
+editing and your operational history never needs publishing.
 
 ### Provenance
 
-Every artifact — source tarball, Python wheel, vendor package, static
-binary — passes a deterministic gate (`scripts/verify-source.sh`)
-before it may be staged or built. Known artifacts must byte-match the
-committed sha256 ledger (the blueprint ships an empty ledger; a running
-instance keeps its live one private via `LFS_LEDGER`). New artifacts
-need an independently published hash (LFS/BLFS book or upstream) and
-are then pinned permanently. A mismatch is treated as a supply-chain
-event, not an inconvenience.
-
-Sources come only from canonical upstream hosts; binaries only from
-vendor-official endpoints (the full table and known limitations are in
-PROVENANCE.md). If you reproduce this system, the ledger guarantees
-you build from the exact bytes this system was built and boot-tested
-from.
+Every artifact passes `scripts/verify-source.sh` before it may be
+staged or built. Known artifacts must byte-match the sha256 ledger
+(the blueprint ships an empty one, a running instance keeps its live
+ledger private). New artifacts need an independently published hash
+and are pinned permanently. A mismatch is a supply-chain event, not
+an inconvenience. Sources come only from canonical upstream hosts,
+binaries only from vendor-official endpoints (full table in
+PROVENANCE.md). Reproducing from the ledger gives you the exact
+bytes this system was built and boot-tested from.
 
 ### Case studies
 
-Operating a source-built daily driver generates the best teaching
-material there is: real failures, diagnosed to root cause, with the
-dead ends left in. Selected episodes are published in
-[case-studies/](case-studies/) after the fact — past-tense, curated,
-delayed for anything security-relevant, and passed through a mechanical
-leak gate. The public repo teaches the timeless; live operational state
-never appears here (see [case study 005](case-studies/005-operating-in-public-without-leaking.md)
-for why).
+Real failures diagnosed to root cause, dead ends left in. Published
+after the fact, past-tense, delayed for anything security-relevant,
+and passed through a mechanical leak gate (see
+[case study 005](case-studies/005-operating-in-public-without-leaking.md)).
 
-- [001 — The touchpad that insisted it was a mouse](case-studies/001-touchpad-enumeration.md):
-  four kernel revisions from "PS/2 Generic Mouse" to a real multitouch
-  device, with two Kconfig traps and the config-verify-gate pattern
-  that catches them.
-- [002 — The GPU that was dark for days](case-studies/002-the-gpu-that-was-dark.md):
-  a desktop software-rendered on the CPU for its entire life, and the
-  initramfs-firmware rule that explains why.
-- [003 — The invisible LUKS prompt](case-studies/003-the-invisible-luks-prompt.md):
-  a one-line change exposes a boot-console gap that had been latent for
-  ten kernel revisions, held harmless by coincidence.
-- [004 — The build environment richer than the machine](case-studies/004-the-build-env-richer-than-the-machine.md):
-  three dependencies that hid in the chroot until the target had to
-  build for itself — why "prove the native pipeline" is a real gate.
-- [005 — Operating a personal machine in public without leaking it](case-studies/005-operating-in-public-without-leaking.md):
-  the accumulation threat model, the three-repo split, and why a
-  mechanical leak gate beats a sanitization checklist.
+- [001 — The touchpad that insisted it was a mouse](case-studies/001-touchpad-enumeration.md),
+  four kernel revisions, two Kconfig traps, the config-verify-gate pattern
+- [002 — The GPU that was dark for days](case-studies/002-the-gpu-that-was-dark.md),
+  a desktop software-rendered its whole life, the initramfs-firmware rule
+- [003 — The invisible LUKS prompt](case-studies/003-the-invisible-luks-prompt.md),
+  a boot-console gap latent for ten kernel revisions
+- [004 — The build environment richer than the machine](case-studies/004-the-build-env-richer-than-the-machine.md),
+  dependencies hiding in the chroot, why "prove the native pipeline" is a gate
+- [005 — Operating a personal machine in public without leaking it](case-studies/005-operating-in-public-without-leaking.md),
+  the accumulation threat model and the three-repo split
 
 ### Known upstream issues & workarounds
 
-Building this system also surfaced issues that were already known
-upstream, already fixed in newer book revisions, or not reportable by
-policy. They are documented here with their workarounds for anyone who
-hits the same wall. The genuinely new defects this project found and
-reported live in [Upstream reports](#upstream-reports) in the human
-section (their workarounds stay embodied in the build scripts,
-`133-i3blocks.sh` `-j1` and the provenance ledger pin on certdata).
-The periodic review (see [How it works](#how-it-works)) keeps both
-current.
+Issues already known upstream, fixed in newer book revisions, or not
+reportable by policy, kept here with workarounds. Genuinely new
+defects go to [Upstream reports](#upstream-reports).
 
-- **yajl 2.1.0** — CMake 4 incompatibility (LOCATION property removal);
-  worked around by trimming tool/test subdirs +
-  CMAKE_POLICY_VERSION_MINIMUM (`build/blfs/scripts/130-yajl.sh`).
-  Already reported upstream
-  ([#257](https://github.com/lloyd/yajl/issues/257), fix
-  [PR #256](https://github.com/lloyd/yajl/pull/256) unmerged; the
-  project is dormant since 2015, distros carry the patch).
-- **unzip60** — unbuildable with GCC 15's C23 default; documented
-  libarchive replacement path
-  (`build/blfs/scripts-gatec/203-unzip.sh`). BLFS has since dropped
-  UnZip and adopted the same bsdunzip path.
-- **XML-Parser 2.54** — new hard runtime deps (File::ShareDir chain)
-  not yet in the LFS 13.0 book (deps in `build/ch8/425-427*.sh`,
-  consumer `build/ch8/430-xml-parser.sh`). Since addressed upstream:
-  the development books moved XML::Parser to BLFS with the dependency
-  chain documented.
-- **GCC 15.2 pass 1 under a GCC 16 host** — libcody u8"" / C++20
-  breakage; pass-1-only gnu++17 pin (`build/ch5/20-gcc-pass1.sh`).
-  Not book-reportable (hosts newer than tested are explicitly
-  unsupported), and moot for the development book, which builds GCC 16.
+- **yajl 2.1.0** — CMake 4 breakage, worked around in
+  `build/blfs/scripts/130-yajl.sh`. Upstream
+  [#257](https://github.com/lloyd/yajl/issues/257) /
+  [PR #256](https://github.com/lloyd/yajl/pull/256) unmerged, project
+  dormant since 2015.
+- **unzip60** — unbuildable under GCC 15's C23 default, libarchive
+  replacement in `build/blfs/scripts-gatec/203-unzip.sh`. BLFS has
+  since adopted the same path.
+- **XML-Parser 2.54** — runtime deps missing from the LFS 13.0 book
+  (`build/ch8/425-427*.sh`, `430-xml-parser.sh`). Since addressed in
+  the development books.
+- **GCC 15.2 pass 1 under a GCC 16 host** — libcody C++20 breakage,
+  pass-1-only gnu++17 pin (`build/ch5/20-gcc-pass1.sh`). Not
+  book-reportable, hosts newer than tested are unsupported.
 
 ## License
 
-The original work in this repository (build scripts, operator
-contracts, skills, sweep machinery, documentation) is MIT-licensed —
-see [LICENSE](LICENSE).
-
-The vendored HTML pages under `build/` and the files under `book/` are
-unmodified excerpts from the [Linux From Scratch](https://www.linuxfromscratch.org/lfs/)
-and [Beyond Linux From Scratch](https://www.linuxfromscratch.org/blfs/)
-books, copyright © Gerard Beekmans and the LFS/BLFS development teams,
-and remain under the books' own licenses (Creative Commons
-Attribution-NonCommercial-ShareAlike for the text, MIT for the
-computer instructions). They are included as the working reference the
-build scripts were derived from.
+Original work here (scripts, contracts, skills, documentation) is
+MIT-licensed, see [LICENSE](LICENSE). The vendored pages under
+`build/` and `book/` are unmodified excerpts from the
+[LFS](https://www.linuxfromscratch.org/lfs/) and
+[BLFS](https://www.linuxfromscratch.org/blfs/) books, copyright ©
+Gerard Beekmans and the LFS/BLFS development teams, under the books'
+own licenses (CC BY-NC-SA for the text, MIT for the computer
+instructions).
