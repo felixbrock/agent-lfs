@@ -26,6 +26,18 @@ It boots a real laptop, with working GPU
 acceleration, Wi-Fi, and Bluetooth, and is used as a daily driver —
 with the agent running *on* the LFS system itself.
 
+**Why not just use a package manager?** A package manager hands you
+the same bytes every time, but nobody reads the install logic those
+bytes came from. Here every install is a reviewed, pinned script, and
+that scrutiny pays outward. Two of the security reports on
+[the public reports page](https://felixbrock.github.io/upstream-reports/)
+came from reading a single vendor installer before its first run, a
+hash-verification tier that silently disabled itself and a nested
+unpinned curl-to-bash, defects that were shipping quietly with every
+default install. A well-made distro package would have protected this
+one machine just as well, but silently. Reviewed installs turn that
+same protection into upstream fixes for everyone.
+
 > **Two audiences read this file.** If you are a **human** deciding
 > whether to run this, read [For the human](#for-the-human) and stop —
 > it is short by design. If you are an **agent** operating the system,
