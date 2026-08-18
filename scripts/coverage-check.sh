@@ -15,12 +15,19 @@ PYPI="$REPO/ops/pypi-tools.txt"
 IGNORE="$REPO/ops/coverage-ignore.txt"
 
 gen_pypi() {
-  echo "# PyPI packages across uv tool envs (user-level installs), name version."
+  echo "# PyPI packages across uv tool envs and extra venvs registered in"
+  echo "# ops/extra-pypi-venvs.txt (user-level installs), name version."
   echo "# Monitored daily via OSV.dev in binary-check.sh (tier 1b-py). Regenerate"
-  echo "# after any uv install/upgrade: scripts/coverage-check.sh --pypi (commit diff)."
-  for t in "$HOME"/.local/share/uv/tools/*/; do
-    ls "$t"lib/python*/site-packages/ 2>/dev/null
-  done | grep -oE '^[A-Za-z0-9._-]+-[0-9][A-Za-z0-9.]*\.dist-info' \
+  echo "# after any uv or extra-venv install/upgrade via coverage-check.sh --pypi."
+  { for t in "$HOME"/.local/share/uv/tools/*/; do
+      ls "$t"lib/python*/site-packages/ 2>/dev/null
+    done
+    # extra user-level venvs (paths relative to $HOME), instance list
+    # lives in the ops repo; absent file just contributes nothing
+    while IFS= read -r v; do
+      ls "$HOME/$v"/lib/python*/site-packages/ 2>/dev/null || true
+    done < <(grep -hvE '^#|^$' "$REPO/ops/extra-pypi-venvs.txt" 2>/dev/null)
+  } | grep -oE '^[A-Za-z0-9._-]+-[0-9][A-Za-z0-9.]*\.dist-info' \
        | sed -E 's/\.dist-info$//; s/^(.*)-([0-9][A-Za-z0-9.]*)$/\1 \2/' \
        | tr 'A-Z_' 'a-z-' | sort -u
 }

@@ -48,6 +48,24 @@ Procedures below assume those mechanisms once they land.
 4. **Upstream binaries** (browser, editors, electron apps): scheduled
    re-fetch of latest releases — the browser is the largest attack surface on the
    whole system and MUST stay current.
+5. **User-context installs** (agent apps and tools living entirely in
+   the owner's home). Run as the user from build/blfs/scripts-user/,
+   no root, no /sources staging, home-drift baselines the result.
+   Provenance adapts rather than relaxes. Vendor the upstream
+   installer next to the script with a pinned sha256 (a .vendored
+   suffix keeps upstream bytes out of build-script hygiene checks),
+   pin the app checkout to a release commit, and require
+   lockfile-hash-verified dependency trees. Wire any new venv into
+   the OSV feed (ops/extra-pypi-venvs.txt, then coverage-check.sh
+   --pypi). Read the vendored installer before first use and verify
+   outcomes after. This class is where nested unpinned "curl | bash"
+   fetches, unasked telemetry identities, and silently disabled
+   lockfile tiers hide. One inherited env guard (uv's UV_NO_CONFIG)
+   can turn a hash-verified sync into an unverified fresh resolve, so
+   confirm the verified tier actually engaged instead of trusting a
+   zero exit. Services and listeners are out of scope for this class,
+   anything that autostarts needs its own design-register entry
+   first.
 
 ## Rules
 
