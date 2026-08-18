@@ -5,35 +5,73 @@
 A [Linux From Scratch](https://www.linuxfromscratch.org/) (LFS 13.0,
 systemd) system built **and operated** by an AI agent.
 
+## How it works
+
 Linux From Scratch normally means compiling a whole Linux system from
-source by hand, following the LFS book. This project goes two steps
-further.
+source by hand, following the LFS book. This project goes further.
+The repo is the spec, an agent is the operator, and the running
+system never diverges from what is committed here.
 
-1. **Everything is scripted.** Every package is a reproducible build
-   script, every installed file is tracked in a manifest, every source
-   is checked against a pinned hash before it touches the build.
-2. **An agent runs the system.** Builds, upgrades, security
-   monitoring, and boot testing, under written contracts (CLAUDE.md,
-   OPERATIONS.md, AGENT-DESIGN.md). The human decides go/no-go on
-   kernel and toolchain changes and provides physical hands. That's
-   it.
+- **everything is scripted** — every package a reproducible build
+  script, every installed file tracked in a manifest, every source
+  checked against a pinned hash before it touches the build, every
+  book deviation registered
+- **an agent runs the system** — builds, upgrades, security
+  monitoring, boot testing, under written contracts (CLAUDE.md,
+  OPERATIONS.md, AGENT-DESIGN.md)
+- **the human does two things** — go/no-go on kernel and toolchain
+  changes, plus physical hands; nothing else
+- **a real daily driver** — boots a real laptop (GPU acceleration,
+  Wi-Fi, Bluetooth), the agent running *on* the LFS system itself
+- **no package manager, on purpose** — deterministic delivery is not
+  review; a package manager hands you the same bytes every time, but
+  nobody reads the install logic those bytes came from; here every
+  install is a reviewed, pinned script
+- **the scrutiny pays outward** — two security reports on
+  [the public reports page](https://felixbrock.github.io/upstream-reports/)
+  came from reading one vendor installer before its first run (a
+  hash-verification tier that silently disabled itself, a nested
+  unpinned curl-to-bash); the packaged path caught neither (no
+  official distro package exists, community packages sidestep the
+  vendor's protections instead of carrying them)
 
-It boots a real laptop (GPU acceleration, Wi-Fi, Bluetooth) and is
-used as a daily driver, with the agent running *on* the LFS system
-itself.
+The agent's roles,
 
-**Why not just use a package manager?** A package manager hands you
-the same bytes every time, but nobody reads the install logic those
-bytes came from. Here every install is a reviewed, pinned script, and
-that scrutiny pays outward. Two of the security reports on
-[the public reports page](https://felixbrock.github.io/upstream-reports/)
-came from reading one vendor installer before its first run (a
-hash-verification tier that silently disabled itself, a nested
-unpinned curl-to-bash). The packaged path caught neither. We checked,
-no official distro package exists for that app and the community
-packages sidestep the vendor's protections instead of carrying them.
-Deterministic delivery is not review. Someone still has to read the
-install path.
+- **package manager** — build the new version, diff manifests, apply
+  onto a fresh snapshot, boot-test, promote
+- **security monitor** — scheduled cloud sweep of CVE trackers and
+  release feeds for every installed component (~290 tracked)
+- **incident responder** — open findings picked up at every session
+  start and driven to a committed fix
+- **contributor** — a periodic review flags work worth publishing as
+  a [case study](#case-studies) or reporting upstream; the agent
+  drafts, the human approves what goes out
+
+The mechanics behind the [Architecture](#architecture) diagram,
+
+- **every fix lands as a script change first** and is applied second,
+  never the reverse, so nothing exists on the machine the repo can't
+  explain
+- **packages build in the host chroot or natively on the live
+  system** (same hash gate, stamps, manifests), and a QEMU VM twin
+  boot-tests boot-critical changes before they touch metal
+- **monitoring matches the software class**, source packages against
+  the Arch *and* Debian trackers, vendor binaries by version lag,
+  user-level Python via OSV.dev, LFS/BLFS advisories as remediation
+  recipes; findings arrive as GitHub issues, and a broken sweep
+  raises its own issue, so a quiet day means a clean day
+- **coverage is a closed loop**, `scripts/coverage-check.sh` compares
+  everything installed against everything monitored and flags the
+  difference until it's mapped or ignored with a written reason (its
+  first run caught an unmonitored Chrome install)
+- **every upgrade batch lands on a fresh btrfs snapshot**,
+  systemd-boot boot counting promotes or auto-rolls-back, and a
+  rescue root (own boot entry, never co-upgraded) comes up over SSH
+  if even the fallback fails
+- **the machine remembers**, a STATE.md journal, per-package
+  manifests, and a kernel-enforced append-only action log
+  (`chattr +a`), so any session reconstructs state without chat
+  history
 
 > **Two audiences read this file.** A **human** deciding whether to
 > run this reads [For the human](#for-the-human) and stops. An
@@ -144,9 +182,6 @@ flowchart TB
     OWNER -->|go/no-go,<br/>hardware steps| AGENT
 ```
 
-The agent-facing detail behind each box is in
-[How it works](#how-it-works).
-
 ### Upstream reports
 
 Impact beyond this machine. Defects this project hits in real
@@ -161,8 +196,9 @@ change republishes the public table at
 ## For the agent
 
 Everything below is the operational picture, written for the operator
-(an agent, or a deeply technical reader). Read the human section
-first, its [Architecture](#architecture) diagram is written for you
+(an agent, or a deeply technical reader). Read
+[How it works](#how-it-works) at the top first, then the human
+section, its [Architecture](#architecture) diagram is written for you
 too.
 
 ### Operating
@@ -200,51 +236,10 @@ editing for instance values.
 - [INVARIANTS.md](INVARIANTS.md) — standing invariants, checked after every session
 - [case-studies/](case-studies/) — real diagnosis chains, the best sense of what this is like
 
-### How it works
-
-The repo is the spec. Every package is a build script, every book
-deviation is registered, and the running system never diverges from
-what is committed here. The agent's roles,
-
-- **package manager** — build the new version, diff manifests, apply
-  onto a fresh snapshot, boot-test, promote
-- **security monitor** — scheduled cloud sweep of CVE trackers and
-  release feeds for every installed component (~290 tracked)
-- **incident responder** — open findings picked up at every session
-  start and driven to a committed fix
-- **contributor** — a periodic review flags work worth publishing as
-  a [case study](#case-studies) or reporting upstream; the agent
-  drafts, the human approves what goes out
-
-The mechanics behind the diagram,
-
-- **every fix lands as a script change first** and is applied second,
-  never the reverse, so nothing exists on the machine the repo can't
-  explain
-- **packages build in the host chroot or natively on the live
-  system** (same hash gate, stamps, manifests), and a QEMU VM twin
-  boot-tests boot-critical changes before they touch metal
-- **monitoring matches the software class**, source packages against
-  the Arch *and* Debian trackers, vendor binaries by version lag,
-  user-level Python via OSV.dev, LFS/BLFS advisories as remediation
-  recipes; findings arrive as GitHub issues, and a broken sweep
-  raises its own issue, so a quiet day means a clean day
-- **coverage is a closed loop**, `scripts/coverage-check.sh` compares
-  everything installed against everything monitored and flags the
-  difference until it's mapped or ignored with a written reason (its
-  first run caught an unmonitored Chrome install)
-- **every upgrade batch lands on a fresh btrfs snapshot**,
-  systemd-boot boot counting promotes or auto-rolls-back, and a
-  rescue root (own boot entry, never co-upgraded) comes up over SSH
-  if even the fallback fails
-- **the machine remembers**, a STATE.md journal, per-package
-  manifests, and a kernel-enforced append-only action log
-  (`chattr +a`), so any session reconstructs state without chat
-  history
-
 ### Invariants
 
-The guarantees above are an explicit register,
+The guarantees in [How it works](#how-it-works) are an explicit
+register,
 [INVARIANTS.md](INVARIANTS.md), checked as a whole. The shape is
 borrowed from the seL4 verification project ([Klein et al., SOSP
 2009](https://www.sigops.org/s/conferences/sosp/2009/papers/klein-sosp09.pdf)),
