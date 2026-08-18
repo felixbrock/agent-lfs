@@ -59,40 +59,6 @@ The agent has four jobs,
   maintain the affected software (upstream); the agent drafts, the
   human approves what goes out
 
-What the boxes in the [Architecture](#architecture) diagram mean,
-
-- **fixes become scripts before they touch the machine**, the script
-  changes first and is applied second, never the reverse, so nothing
-  exists on the machine that the repo cannot explain
-- **packages build in an isolated environment**, either a chroot on
-  the build host (a directory tree the build is locked into, so it
-  cannot touch the rest of the machine) or directly on the live
-  system, with the same checksum check, done-markers, and manifests
-  either way; changes that could break booting are tried first in a
-  QEMU virtual machine that mirrors the real system (the VM twin)
-- **each kind of software is watched the way it needs**, source
-  packages against the Arch *and* Debian security trackers (two
-  independent sources), vendor binaries by how far they trail the
-  newest release, user-level Python tools via OSV.dev, and LFS/BLFS
-  advisories as ready-made fix recipes; findings arrive as GitHub
-  issues, and a broken check opens an issue about itself, so a quiet
-  day means a clean day
-- **nothing installed goes unwatched**, `scripts/coverage-check.sh`
-  compares the list of installed software against the list of
-  monitored software and keeps flagging the difference until every
-  item is monitored or ignored with a written reason (its first run
-  caught a Chrome install nobody was watching)
-- **every upgrade can be undone automatically**, each batch of
-  upgrades is applied onto a fresh btrfs snapshot, the boot loader
-  counts failed boot attempts and switches back to the previous
-  snapshot on its own (systemd-boot boot counting), and a separate
-  rescue system (its own boot entry, never upgraded together with
-  the main one) comes up reachable over SSH if even that fails
-- **the system keeps its own written history**, a STATE.md journal,
-  the per-package manifests, and an action log the kernel only
-  allows appending to, never editing (`chattr +a`), so a new session
-  can reconstruct where things stand without any chat history
-
 > **Two audiences read this file.** A **human** deciding whether to
 > run this reads [For the human](#for-the-human) and stops. An
 > **agent** operating the system, or anyone wanting the full
@@ -150,6 +116,40 @@ calls (the diagram says go/no-go) and do the physical steps. The
 agent does everything else, treating this repo as the single source
 of truth. Scheduled security checks watch the result, and every
 change carries an automatic way back.
+
+What the boxes in the diagram mean,
+
+- **fixes become scripts before they touch the machine**, the script
+  changes first and is applied second, never the reverse, so nothing
+  exists on the machine that the repo cannot explain
+- **packages build in an isolated environment**, either a chroot on
+  the build host (a directory tree the build is locked into, so it
+  cannot touch the rest of the machine) or directly on the live
+  system, with the same checksum check, done-markers, and manifests
+  either way; changes that could break booting are tried first in a
+  QEMU virtual machine that mirrors the real system (the VM twin)
+- **each kind of software is watched the way it needs**, source
+  packages against the Arch *and* Debian security trackers (two
+  independent sources), vendor binaries by how far they trail the
+  newest release, user-level Python tools via OSV.dev, and LFS/BLFS
+  advisories as ready-made fix recipes; findings arrive as GitHub
+  issues, and a broken check opens an issue about itself, so a quiet
+  day means a clean day
+- **nothing installed goes unwatched**, `scripts/coverage-check.sh`
+  compares the list of installed software against the list of
+  monitored software and keeps flagging the difference until every
+  item is monitored or ignored with a written reason (its first run
+  caught a Chrome install nobody was watching)
+- **every upgrade can be undone automatically**, each batch of
+  upgrades is applied onto a fresh btrfs snapshot, the boot loader
+  counts failed boot attempts and switches back to the previous
+  snapshot on its own (systemd-boot boot counting), and a separate
+  rescue system (its own boot entry, never upgraded together with
+  the main one) comes up reachable over SSH if even that fails
+- **the system keeps its own written history**, a STATE.md journal,
+  the per-package manifests, and an action log the kernel only
+  allows appending to, never editing (`chattr +a`), so a new session
+  can reconstruct where things stand without any chat history
 
 ```mermaid
 flowchart TB
