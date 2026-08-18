@@ -34,9 +34,13 @@ that scrutiny pays outward. Two of the security reports on
 came from reading a single vendor installer before its first run, a
 hash-verification tier that silently disabled itself and a nested
 unpinned curl-to-bash, defects that were shipping quietly with every
-default install. A well-made distro package would have protected this
-one machine just as well, but silently. Reviewed installs turn that
-same protection into upstream fixes for everyone.
+default install. And the packaged path caught neither. We checked, no
+official distro package exists for that app, and the community
+packages sidestep the vendor's protections instead of carrying them
+(plain pip in place of the hash-locked resolver, an upstream build
+guard patched out, the unpinned fetch still reachable at runtime).
+Deterministic delivery is not review. Someone still has to read the
+install path, and here that someone is on duty for every install.
 
 > **Two audiences read this file.** If you are a **human** deciding
 > whether to run this, read [For the human](#for-the-human) and stop —
