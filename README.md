@@ -154,16 +154,20 @@ The agent-facing detail behind each box is in
 
 ### Upstream reports
 
-Impact beyond this machine. These defects sat unreported in real
-software until this project's build or operation hit them. The agent
-root-caused each one, verified it was still unfixed upstream and
-drafted the report, and the owner filed it under his own identity.
-The periodic outward-contributions review keeps this table current.
+Impact beyond this machine. These defects hit this project's build or
+operation in real software. The agent root-caused each one and checked
+the upstream tracker before writing anything, a finding already filed
+by someone else gets a verified confirmation on the existing thread
+instead of a duplicate report. Everything goes out under the owner's
+identity, drafted by the agent and filed on the owner's go-ahead. The
+periodic outward-contributions review keeps this table current.
 
 | upstream | finding | type | status | report |
 |---|---|---|---|---|
 | make-ca 1.16.1 | `--get` silently drops the last certdata.txt line, a fixed `head -n -33` strip assumes the `openssl s_client` trailer never varies (it grows and shrinks with TLS 1.3 session tickets) | bug | **open**, filed 2026-08-16 with a tested patch | [lfs-book/make-ca#38](https://github.com/lfs-book/make-ca/issues/38) |
 | i3blocks 1.5 | `make install` race under parallel make (install-data-local rename) | bug | **open**, filed 2026-07-20, maintainer silent so far | [vivien/i3blocks#498](https://github.com/vivien/i3blocks/issues/498) |
+| hermes-agent v2026.8.18 | default install curl-pipes an unpinned main-branch installer from a second repo (trycua/cua) for the computer-use driver, no tag, no checksum, and a telemetry id minted before the tool is ever enabled | bug | **open**, filed 2026-08-18 | [NousResearch/hermes-agent#89158](https://github.com/NousResearch/hermes-agent/issues/89158) |
+| hermes-agent v2026.8.18 | installer's own `UV_NO_CONFIG=1` export invalidates the exclude-newer settings recorded in uv.lock, the hash-verified locked sync fails and the install silently falls back to an unverified fresh PyPI resolve | confirmation | **open**, filed by another user 2026-08-16, our still-broken-on-latest repro + quarantine-bypass impact + downstream workaround added 2026-08-18 | [NousResearch/hermes-agent#82446](https://github.com/NousResearch/hermes-agent/issues/82446#issuecomment-5328101036) |
 
 ## For the agent
 
