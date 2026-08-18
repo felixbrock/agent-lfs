@@ -5,8 +5,6 @@
 A [Linux From Scratch](https://www.linuxfromscratch.org/) (LFS 13.0,
 systemd) system built **and operated** by an AI agent.
 
-> ⚠️ **Experimental research project — use with care.**
-
 Linux From Scratch normally means compiling a whole Linux system from
 source by hand, following the LFS book. This project goes two steps
 further.
